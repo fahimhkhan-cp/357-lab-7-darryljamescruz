@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <string.h>
 
 #define PORT 2828
-
 #define MIN_ARGS 2
 #define MAX_ARGS 2
 #define SERVER_ARG_IDX 1
 
 #define USAGE_STRING "usage: %s <server address>\n"
+#define BUFFER_SIZE 1024
 
 void validate_arguments(int argc, char *argv[])
 {
@@ -29,12 +30,24 @@ void validate_arguments(int argc, char *argv[])
 void send_request(int fd)
 {
    char *line = NULL;
-   size_t size;
+   size_t size = 0;
    ssize_t num;
+   char buffer[BUFFER_SIZE];
 
    while ((num = getline(&line, &size, stdin)) >= 0)
    {
-      write(fd, line, num);
+      write(fd, line, num); // Send data to server
+      ssize_t received = read(fd, buffer, BUFFER_SIZE - 1); // Receive echoed data
+      if (received > 0)
+      {
+          buffer[received] = '\0'; // Null-terminate for printing
+          printf("Server echoed: %s", buffer);
+      }
+      else
+      {
+          perror("read");
+          break;
+      }
    }
 
    free(line);

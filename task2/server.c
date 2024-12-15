@@ -20,13 +20,17 @@ void handle_request(int nfd)
       return;
    }
 
-   while ((num = getline(&line, &size, network)) >= 0)
-   {
-      printf("%s", line);
+   //NEW: Echo the received data back to the client
+   while ((num = getline(&line, &size, network)) != -1) {
+      if (write(nfd, line, num) == -1) {  //sends the received line back to the client through the socket.
+         perror("write");
+         break;
+      }
    }
 
    free(line);
    fclose(network);
+   close(nfd); //NEW: close the network socket
 }
 
 void run_service(int fd)
